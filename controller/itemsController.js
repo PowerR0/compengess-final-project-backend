@@ -10,9 +10,10 @@ const {
 
 const docClient = new DynamoDBClient({ regions: process.env.AWS_REGION });
 
-exports.getGroupMembers = async (req, res) => {
+//Get Assignment from DynamoDB
+exports.getAssignments = async (req, res) => {
   const params = {
-    TableName: process.env.aws_group_members_table_name,
+    TableName: process.env.aws_assignment_table_name,
   };
   try {
     const data = await docClient.send(new ScanCommand(params));
@@ -23,26 +24,44 @@ exports.getGroupMembers = async (req, res) => {
   }
 };
 
-// TODO #1.1: Get items from DynamoDB
-exports.getItems = async (req, res) => {
+//Points from DynamoDB
+exports.getPoints = async (req, res) => {
   // You should change the response below.
-  res.send("This route should get all items in DynamoDB.");
+  const params = {
+    TableName: process.env.aws_point_table_name,
+  };
+  try {
+    const data = await docClient.send(new ScanCommand(params));
+    res.send(data.Items);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(err);
+  }
 };
 
-// TODO #1.2: Add an item to DynamoDB
-exports.addItem = async (req, res) => {
-  const item_id = uuidv4();
-  const created_date = Date.now();
-  const item = { item_id: item_id, ...req.body, created_date: created_date };
+// change point from submit or trade
+exports.changePoints = async (req, res) => {
+  const items = this.getGroupMembers;
 
-  // You should change the response below.
-  res.send("This route should add an item in DynamoDB.");
-};
+  const scanParams = {
+    TableName: process.env.aws_point_table_name,
+    Item: items
+  }
 
-// TODO #1.3: Delete an item from DynamDB
-exports.deleteItem = async (req, res) => {
-  const item_id = req.params.item_id;
+  try{
+    const data = await docClient.send(new ScanCommand(scanParams))
+    res.send("success");
+  }catch{
+    console.error(err);
+    res.status(500).send(err);
+  }
 
-  // You should change the response below.
-  res.send("This route should delete an item in DynamoDB with item_id.");
+  try{
+    data = await docClient.send(new PutCommand(params))
+    res.send("success");
+  }catch{
+    console.error(err);
+    res.status(500).send(err);
+  }
+
 };

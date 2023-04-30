@@ -53,7 +53,7 @@ exports.accessToken = (req, res) => {
           console.log(req.session);
           if (token) {
             res.writeHead(302, {
-              Location: `http://${process.env.frontendIPAddress}/home.html`,
+              Location: `http://${process.env.frontendIPAddress}/index.html`,
             });
             res.end();
           }
@@ -107,8 +107,35 @@ exports.getProfileInformation = (req, res) => {
 // TODO #3.2: Send "GET" request to CV endpoint to get all courses that you enrolled
 exports.getCourses = (req, res) => {
   // You should change the response below.
-  res.send("This route should get all courses that you enrolled.");
-  res.end();
+  try {
+    const profileOptions = {
+      headers: {
+        Authorization: `Bearer ${req.session.token.access_token}`,
+      },
+    };
+    const profileReq = https.request(
+      "https://www.mycourseville.com/api/v1/public/get/user/courses",
+      profileOptions,
+      (profileRes) => {
+        let profileData = "";
+        profileRes.on("data", (chunk) => {
+          profileData += chunk; 
+        });
+        profileRes.on("end", () => {
+          const profile = JSON.parse(profileData);
+          res.send(profile);
+          res.end();
+        });
+      }
+    );
+    profileReq.on("error", (err) => {
+      console.error(err);
+    });
+    profileReq.end();
+  } catch (error) {
+    console.log(error);
+    console.log("Please logout, then login again.");
+  }
 };
 
 // TODO #3.4: Send "GET" request to CV endpoint to get all course assignments based on cv_cid
@@ -129,6 +156,6 @@ exports.getAssignmentDetail = (req, res) => {
 
 exports.logout = (req, res) => {
   req.session.destroy();
-  res.redirect(`http://${process.env.frontendIPAddress}/login.html`);
+  res.redirect(`http://${process.env.frontendIPAddress}/index.html`);
   res.end();
 };
